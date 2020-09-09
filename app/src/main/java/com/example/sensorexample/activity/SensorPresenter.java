@@ -8,8 +8,14 @@ import com.example.sensorexample.sensor.SensorInfo;
 import com.example.sensorexample.sensor.SensorListenerWrapper;
 import com.example.sensorexample.service.SensorBinder;
 import com.example.sensorexample.ws.WSHandler;
+import com.example.sensorexample.ws.WSListener;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+
+import okhttp3.Response;
+import okhttp3.WebSocket;
 
 class SensorPresenter implements Contract.Presenter {
 
@@ -57,7 +63,13 @@ class SensorPresenter implements Contract.Presenter {
         final String type = info.get(pos).toLowerCase();
 
         //ws连接
-        WSHandler.connect(type);
+        WSHandler.connect(type, new WSListener(){
+            @Override
+            public void onOpen(@NotNull WebSocket webSocket, Response response) {
+                super.onOpen(webSocket, response);
+                view.onDataTransmitting(pos);
+            }
+        });
         //开启传感器监听
         binder.active(type, new SensorListenerWrapper() {
             @Override
@@ -72,5 +84,6 @@ class SensorPresenter implements Contract.Presenter {
         String type = info.get(pos).toLowerCase();
         binder.sleep(type);
         WSHandler.close(type);
+        view.onDataTransmissionStopped(pos);
     }
 }

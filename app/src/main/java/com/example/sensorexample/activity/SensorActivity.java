@@ -5,12 +5,14 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.example.sensorexample.R;
 import com.example.sensorexample.SensorApplication;
 import com.example.sensorexample.databinding.ActivityMainBinding;
@@ -19,14 +21,18 @@ import com.example.sensorexample.service.SensorBinder;
 import com.example.sensorexample.service.SensorService;
 import com.example.sensorexample.ui.SensorUIAdapter;
 import com.nikhilpanju.recyclerviewenhanced.RecyclerTouchListener;
+import com.zyao89.view.zloading.ZLoadingDialog;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import cn.kevin.floatingeditor.EditorCallback;
 import cn.kevin.floatingeditor.EditorHolder;
 import cn.kevin.floatingeditor.FloatEditorActivity;
+
+import static com.zyao89.view.zloading.Z_TYPE.SINGLE_CIRCLE;
 
 @SuppressLint("NonConstantResourceId")
 @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -50,7 +56,26 @@ public class SensorActivity extends AppCompatActivity implements Contract.View {
     private void btnInit(){
         binding.btnCommit.setOnClickListener(v -> {
             String url = binding.etUrl.getText().toString();
-            binder.bindUrl(url);
+            ZLoadingDialog zLoadingDialog = new ZLoadingDialog(this);
+            zLoadingDialog.setLoadingBuilder(SINGLE_CIRCLE)
+                    .setLoadingColor(Color.BLACK)
+                    .setHintText("connecting...")
+                    .setHintTextSize(16)
+                    .setHintTextColor(Color.GRAY)
+                    .setDurationTime(0.5)
+                    .show();
+            binder.bindUrl(url, new SensorBinder.OnBindUrlListener() {
+                @Override
+                public void onSuccess() {
+                    zLoadingDialog.cancel();
+                    binding.btnCommit.setText("connected");
+                }
+
+                @Override
+                public void onFailure() {
+                    zLoadingDialog.cancel();
+                }
+            });
         });
     }
 
@@ -174,5 +199,17 @@ public class SensorActivity extends AppCompatActivity implements Contract.View {
     @Override
     public void onNetworkChanged(String newIp) {
         binding.tvIp.setText(newIp);
+    }
+
+    @Override
+    public void onDataTransmitting(int pos) {
+        BaseViewHolder viewHolder = (BaseViewHolder)binding.rv.getChildViewHolder(binding.rv.getChildAt(pos));
+        viewHolder.setTextColor(R.id.mainText, Color.RED);
+    }
+
+    @Override
+    public void onDataTransmissionStopped(int pos) {
+        BaseViewHolder viewHolder = (BaseViewHolder)binding.rv.getChildViewHolder(binding.rv.getChildAt(pos));
+        viewHolder.setTextColor(R.id.mainText, Color.BLACK);
     }
 }

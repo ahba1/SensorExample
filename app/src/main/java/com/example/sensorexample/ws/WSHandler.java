@@ -43,7 +43,11 @@ public class WSHandler{
 
     public static void connect(String type) {
         //构造request对象
-        webSockets.put(type, buildWS(type, new WSListener()));
+        connect(type, new WSListener());
+    }
+
+    public static void connect(String type, WSListener listener){
+        webSockets.put(type, buildWS(type, listener));
     }
 
     public static WebSocket buildWS(String type, WebSocketListener listener){

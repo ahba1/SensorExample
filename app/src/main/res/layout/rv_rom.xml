@@ -35,7 +35,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:tint="@android:color/white"/>
+                    app:tint="@android:color/white" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -47,7 +47,7 @@
                     android:ellipsize="end"
                     android:gravity="center"
                     android:maxLines="1"
-                    android:text="Start"
+                    android:text="@string/start"
                     android:textColor="@android:color/white"
                     android:textSize="12sp"/>
             </LinearLayout>
@@ -74,7 +74,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
-                    android:tint="@android:color/white"/>
+                    app:tint="@android:color/white" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -86,7 +86,7 @@
                     android:ellipsize="end"
                     android:gravity="center"
                     android:maxLines="1"
-                    android:text="Edit"
+                    android:text="@string/edit"
                     android:textColor="@android:color/white"
                     android:textSize="12sp"/>
             </LinearLayout>
@@ -107,13 +107,14 @@
                 android:layout_centerInParent="true"
                 android:background="?android:selectableItemBackground"
                 android:gravity="center_vertical|left"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                tools:ignore="RtlHardcoded">
 
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
-                    android:tint="@android:color/white">
+                    app:tint="@android:color/white">
                 </ImageView>
 
                 <TextView
@@ -126,7 +127,7 @@
                     android:ellipsize="end"
                     android:gravity="center"
                     android:maxLines="1"
-                    android:text="Stop"
+                    android:text="@string/stop"
                     android:textColor="@android:color/white"
                     android:textSize="12sp"/>
             </LinearLayout>
@@ -165,10 +166,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:maxLines="1"
-                    android:text="No Calls Found"
                     android:textSize="28sp"
                     android:textStyle="bold"
-                    tools:text="Row 1"
+                    android:textColor="@color/black"
                     android:layout_gravity="center"/>
 
 <!--                <TextView-->

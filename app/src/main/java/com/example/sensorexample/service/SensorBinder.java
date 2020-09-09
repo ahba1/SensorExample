@@ -41,6 +41,14 @@ public class SensorBinder extends Binder {
 
     private final SensorService sensorService;
 
+    private OnBindUrlListener l;
+
+    public interface OnBindUrlListener{
+        void onSuccess();
+
+        void onFailure();
+    }
+
     public SensorBinder(SensorService sensorService){
         this.sensorService = sensorService;
         manager = (SensorManager)sensorService.getSystemService(Context.SENSOR_SERVICE);
@@ -102,9 +110,17 @@ public class SensorBinder extends Binder {
     }
 
     //在绑定url之后，打开控制信道，并传递本机的ip地址
-    public void bindUrl(String url){
+    public void bindUrl(String url, OnBindUrlListener l){
+        this.l = l;
         WSHandler.bind(url);
         control = WSHandler.buildWS("control/"+ NetworkStateReceiver.getIp(), new WSListener(){
+
+            @Override
+            public void onOpen(@NotNull WebSocket webSocket, Response response) {
+                super.onOpen(webSocket, response);
+                l.onSuccess();
+            }
+
             @Override
             public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
                 super.onMessage(webSocket, text);
@@ -128,7 +144,7 @@ public class SensorBinder extends Binder {
             @Override
             public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, Response response) {
                 super.onFailure(webSocket, t, response);
-                Toast.makeText(sensorService.getApplication(), "network error, please check your network", Toast.LENGTH_SHORT).show();
+                l.onFailure();
             }
         });
     }

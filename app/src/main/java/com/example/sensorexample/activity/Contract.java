@@ -8,6 +8,10 @@ public interface Contract {
 
     interface View extends BaseView<Presenter> {
         void onNetworkChanged(String newIp);
+
+        void onDataTransmitting(int pos);
+
+        void onDataTransmissionStopped(int pos);
     }
 
     interface Presenter extends BasePresenter {
