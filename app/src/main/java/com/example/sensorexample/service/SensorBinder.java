@@ -4,10 +4,13 @@ import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Binder;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
+import com.example.sensorexample.activity.SensorActivity;
 import com.example.sensorexample.broadcast.NetworkStateReceiver;
 import com.example.sensorexample.sensor.SensorInfo;
 import com.example.sensorexample.sensor.SensorListenerWrapper;
@@ -41,7 +44,9 @@ public class SensorBinder extends Binder {
 
     private final SensorService sensorService;
 
-    private OnBindUrlListener l;
+    private OnBindUrlListener onBindUrlListener;
+
+    private SensorActivity.ItemEventHandler handler;
 
     public interface OnBindUrlListener{
         void onSuccess();
@@ -64,6 +69,10 @@ public class SensorBinder extends Binder {
             SensorWrapper wrapper = new SensorWrapper(sensorService, type, sensor, listenerWrapper);
             wrapper.active(manager, delay, samplingPeriodUs);
             sensorWrapperMap.put(type, wrapper);
+            Message message = handler.obtainMessage();
+            message.what = SensorActivity.WS_OPEN;
+            message.obj = type;
+            handler.sendMessage(message);
         }else {
             Objects.requireNonNull(sensorWrapperMap.get(type)).setListenerWrapper(listenerWrapper);
             Objects.requireNonNull(sensorWrapperMap.get(type)).active(manager, 0, samplingPeriodUs);
@@ -92,6 +101,10 @@ public class SensorBinder extends Binder {
 
     public void sleep(String type){
         Objects.requireNonNull(sensorWrapperMap.get(type)).sleep(manager);
+        Message message = handler.obtainMessage();
+        message.what = SensorActivity.WS_CLOSED;
+        message.obj = type;
+        handler.sendMessage(message);
     }
 
     public void closeAll(){
@@ -110,8 +123,9 @@ public class SensorBinder extends Binder {
     }
 
     //在绑定url之后，打开控制信道，并传递本机的ip地址
-    public void bindUrl(String url, OnBindUrlListener l){
-        this.l = l;
+    public void bindUrl(String url, OnBindUrlListener l, SensorActivity.ItemEventHandler handler){
+        this.onBindUrlListener = l;
+        this.handler = handler;
         WSHandler.bind(url);
         control = WSHandler.buildWS("control/"+ NetworkStateReceiver.getIp(), new WSListener(){
 
@@ -144,8 +158,13 @@ public class SensorBinder extends Binder {
             @Override
             public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, Response response) {
                 super.onFailure(webSocket, t, response);
-                l.onFailure();
+                onBindUrlListener.onFailure();
             }
         });
+    }
+
+    public void unBind(){
+        closeAll();
+        control.cancel();
     }
 }

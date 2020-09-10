@@ -1,27 +1,37 @@
 package com.example.sensorexample.ui;
 
-import android.graphics.Color;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.example.sensorexample.R;
+import com.yqritc.recyclerviewflexibledivider.FlexibleDividerDecoration;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Set;
 
-public class SensorUIAdapter extends BaseQuickAdapter<String, BaseViewHolder> {
+import androidx.recyclerview.widget.RecyclerView;
 
-    private Set<String> ls;
+public class SensorUIAdapter extends BaseQuickAdapter<String, BaseViewHolder> implements FlexibleDividerDecoration.VisibilityProvider {
 
-    public SensorUIAdapter(Set<String> ls){
-        super(R.layout.rv_rom, new ArrayList<String>(ls));
+    private final ArrayList<String> ls;
+
+    public SensorUIAdapter(ArrayList<String> ls){
+        super(R.layout.rv_rom, ls);
         this.ls = ls;
     }
 
     @Override
     protected void convert(@NotNull BaseViewHolder baseViewHolder, String s) {
         baseViewHolder.setText(R.id.mainText, s);
+    }
+
+    public int getPosByType(String type){
+        return ls.indexOf(type);
+    }
+
+    @Override
+    public boolean shouldHideDivider(int i, RecyclerView recyclerView) {
+        return true;
     }
 }

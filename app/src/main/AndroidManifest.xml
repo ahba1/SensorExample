@@ -22,16 +22,15 @@
             android:enabled="true"
             android:exported="true">
         </service>
-        <activity android:name=".MainActivity">
-
-        </activity>
         
-        <activity android:name=".activity.SensorActivity">
+        <activity android:name=".activity.SensorActivity"
+            android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
     </application>
 

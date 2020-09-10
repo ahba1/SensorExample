@@ -1,28 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical">
+    <include layout="@layout/title_bar"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:orientation="horizontal">
+        android:paddingTop="7dp"
+        android:orientation="horizontal"
+        android:background="@color/rv_background"
+        >
 
         <EditText
             android:id="@+id/et_url"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="3" />
+            android:layout_weight="4"
+            android:textColor="@color/white"
+            android:theme="@style/MyEditText"/>
 
-        <Button
+
+        <com.suke.widget.SwitchButton
             android:id="@+id/btn_commit"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="commit">
-        </Button>
+            android:textAllCaps="true"
+            app:sb_border_width="0dp"
+            app:sb_shadow_radius="10dp"
+            android:layout_marginVertical="10dp"
+            app:sb_button_color="@color/item_background">
+        </com.suke.widget.SwitchButton>
 
 
     </LinearLayout>
@@ -31,21 +43,29 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingTop="7dp"
+        android:background="@color/rv_background">
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="ip"
-            android:gravity="center"/>
+            android:text="@string/ip"
+            android:textSize="20sp"
+            android:textColor="@color/white"
+            android:gravity="center"
+            android:background="@color/item_background"/>
 
         <TextView
             android:id="@+id/tv_ip"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="3"
-            android:gravity="center"/>
+            android:layout_weight="1"
+            android:textSize="20sp"
+            android:textColor="@color/white"
+            android:gravity="center"
+            android:background="@color/item_background"/>
 
 
     </LinearLayout>
@@ -54,9 +74,11 @@
         android:id="@+id/rv"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="6"
+        android:layout_weight="8"
         android:visibility="visible"
-        android:orientation="horizontal" />
+        android:orientation="horizontal"
+        android:background="@color/rv_background"
+        android:paddingTop="@dimen/dp_10"/>
 
 <!--    <LinearLayout-->
 <!--        android:layout_width="match_parent"-->

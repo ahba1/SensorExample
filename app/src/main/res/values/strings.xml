@@ -10,4 +10,7 @@
     <string name="start">Start</string>
     <string name="edit">Edit</string>
     <string name="stop">Stop</string>
+    <string name="commit">commit</string>
+    <string name="ip">device ip</string>
+    <string name="phone_sensor_streamer">Phone Sensor Streamer</string>
 </resources>

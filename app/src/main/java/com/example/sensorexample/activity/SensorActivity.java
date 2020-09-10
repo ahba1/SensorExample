@@ -6,11 +6,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
+import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 
 import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.example.sensorexample.R;
@@ -23,6 +30,10 @@ import com.example.sensorexample.ui.SensorUIAdapter;
 import com.nikhilpanju.recyclerviewenhanced.RecyclerTouchListener;
 import com.zyao89.view.zloading.ZLoadingDialog;
 
+import java.util.ArrayList;
+import java.util.Objects;
+
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -46,36 +57,53 @@ public class SensorActivity extends AppCompatActivity implements Contract.View {
 
     private ActivityMainBinding binding;
 
+    private ItemEventHandler itemChangedHandler;
+
+    public final static int WS_OPEN = 513;
+
+    public final static int WS_CLOSED = 614;
+
     private void rvInit(){
-        SensorUIAdapter adapter = new SensorUIAdapter(SensorInfo.getSensorNames());
+        SensorUIAdapter adapter = new SensorUIAdapter(new ArrayList<>(SensorInfo.getSensorNames()));
         LinearLayoutManager manager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         binding.rv.setLayoutManager(manager);
+        binding.rv.addItemDecoration(new RecyclerView.ItemDecoration() {
+            @Override
+            public void getItemOffsets(@NonNull Rect outRect, @NonNull View view, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
+                outRect.set(0, 0, 0, 30);
+            }
+        });
         binding.rv.setAdapter(adapter);
     }
 
     private void btnInit(){
-        binding.btnCommit.setOnClickListener(v -> {
-            String url = binding.etUrl.getText().toString();
-            ZLoadingDialog zLoadingDialog = new ZLoadingDialog(this);
-            zLoadingDialog.setLoadingBuilder(SINGLE_CIRCLE)
-                    .setLoadingColor(Color.BLACK)
-                    .setHintText("connecting...")
-                    .setHintTextSize(16)
-                    .setHintTextColor(Color.GRAY)
-                    .setDurationTime(0.5)
-                    .show();
-            binder.bindUrl(url, new SensorBinder.OnBindUrlListener() {
-                @Override
-                public void onSuccess() {
-                    zLoadingDialog.cancel();
-                    binding.btnCommit.setText("connected");
-                }
+        binding.btnCommit.setChecked(false);
+        binding.btnCommit.setOnCheckedChangeListener((view, isChecked) -> {
+            if (isChecked){
+                String url = binding.etUrl.getText().toString();
+                ZLoadingDialog zLoadingDialog = new ZLoadingDialog(SensorActivity.this);
+                zLoadingDialog.setLoadingBuilder(SINGLE_CIRCLE)
+                        .setLoadingColor(Color.BLACK)
+                        .setHintText("connecting...")
+                        .setHintTextSize(16)
+                        .setHintTextColor(Color.GRAY)
+                        .setDurationTime(0.5)
+                        .show();
+                binder.bindUrl(url, new SensorBinder.OnBindUrlListener() {
+                    @Override
+                    public void onSuccess() {
+                        zLoadingDialog.cancel();
+                    }
 
-                @Override
-                public void onFailure() {
-                    zLoadingDialog.cancel();
-                }
-            });
+                    @Override
+                    public void onFailure() {
+                        zLoadingDialog.cancel();
+                    }
+
+                }, itemChangedHandler);
+            }else{
+                binder.unBind();
+            }
         });
     }
 
@@ -141,7 +169,7 @@ public class SensorActivity extends AppCompatActivity implements Contract.View {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         View view = binding.getRoot();
         setContentView(view);
-
+        itemChangedHandler = new ItemEventHandler(this);
         //初始化rv
         rvInit();
 
@@ -202,14 +230,66 @@ public class SensorActivity extends AppCompatActivity implements Contract.View {
     }
 
     @Override
-    public void onDataTransmitting(int pos) {
+    public void onDataTransmitting(String type) {
+        int pos = ((SensorUIAdapter) Objects.requireNonNull(binding.rv.getAdapter())).getPosByType(type);
         BaseViewHolder viewHolder = (BaseViewHolder)binding.rv.getChildViewHolder(binding.rv.getChildAt(pos));
         viewHolder.setTextColor(R.id.mainText, Color.RED);
     }
 
     @Override
-    public void onDataTransmissionStopped(int pos) {
+    public void onDataTransmissionStopped(String type) {
+        int pos = ((SensorUIAdapter) Objects.requireNonNull(binding.rv.getAdapter())).getPosByType(type);
         BaseViewHolder viewHolder = (BaseViewHolder)binding.rv.getChildViewHolder(binding.rv.getChildAt(pos));
         viewHolder.setTextColor(R.id.mainText, Color.BLACK);
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        View focusView = this.getCurrentFocus();
+        if (hideInputWhenTouchOtherView(focusView, event)){
+            InputMethodManager inputMethodManager = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (inputMethodManager!=null){
+                inputMethodManager.hideSoftInputFromWindow(focusView.getWindowToken(), 0);
+            }
+        }
+        return super.dispatchTouchEvent(event);
+    }
+
+    public boolean hideInputWhenTouchOtherView(View focusView, MotionEvent event){
+        if (event.getAction() ==  MotionEvent.ACTION_DOWN){
+
+            if (focusView instanceof EditText){
+                int[] leftTop = {0, 0};
+                //获取输入框当前的location位置
+                focusView.getLocationInWindow(leftTop);
+                int left = leftTop[0];
+                int top = leftTop[1];
+                int bottom = top + focusView.getHeight();
+                int right = left + focusView.getWidth();
+                return !(event.getX() > left && event.getX() < right
+                        && event.getY() > top && event.getY() < bottom);
+            }
+        }
+        return false;
+    }
+    public static class ItemEventHandler extends Handler{
+
+        public SensorActivity context;
+
+        public ItemEventHandler(SensorActivity context){
+            this.context = context;
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            if(msg.what==WS_OPEN){
+                String type = (String)msg.obj;
+                context.onDataTransmitting(type);
+                Log.v("ws open", type);
+            }else if(msg.what==WS_CLOSED){
+                String type = (String)msg.obj;
+                context.onDataTransmissionStopped(type);
+            }
+        }
     }
 }

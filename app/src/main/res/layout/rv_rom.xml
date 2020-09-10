@@ -18,7 +18,7 @@
             android:id="@+id/add"
             android:layout_width="@dimen/swipeWidth"
             android:layout_height="match_parent"
-            android:background="@color/swipeoption_blue"
+            android:background="@color/swipeoption_green"
             android:clickable="true"
             android:focusable="true"
             android:orientation="vertical">
@@ -57,7 +57,7 @@
             android:id="@+id/edit"
             android:layout_width="@dimen/swipeWidth"
             android:layout_height="match_parent"
-            android:background="@color/swipeoption_green"
+            android:background="@color/swipeoption_yellow"
             android:clickable="true"
             android:focusable="true"
             android:orientation="vertical">
@@ -138,7 +138,7 @@
         android:id="@+id/rowFG"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@android:color/white"
+        android:background="@color/item_background"
         android:clickable="true"
         android:elevation="4dp"
         android:focusable="true"
@@ -168,34 +168,11 @@
                     android:maxLines="1"
                     android:textSize="28sp"
                     android:textStyle="bold"
-                    android:textColor="@color/black"
+                    android:textColor="@color/white"
                     android:layout_gravity="center"/>
 
-<!--                <TextView-->
-<!--                    android:id="@+id/subText"-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_marginTop="2dp"-->
-<!--                    android:maxLines="1"-->
-<!--                    tools:text="Some text ..."/>-->
             </LinearLayout>
-
-<!--            <Button-->
-<!--                android:id="@+id/rowButton"-->
-<!--                style="?attr/buttonBarButtonStyle"-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:layout_gravity="right|center_vertical"-->
-<!--                android:gravity="right|center_vertical"-->
-<!--                android:text="Button"/>-->
         </LinearLayout>
 
     </LinearLayout>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_alignParentBottom="true"
-        android:background="#67676767"
-        android:elevation="5dp"/>
 </RelativeLayout>

@@ -9,9 +9,9 @@ public interface Contract {
     interface View extends BaseView<Presenter> {
         void onNetworkChanged(String newIp);
 
-        void onDataTransmitting(int pos);
+        void onDataTransmitting(String type);
 
-        void onDataTransmissionStopped(int pos);
+        void onDataTransmissionStopped(String type);
     }
 
     interface Presenter extends BasePresenter {

@@ -7,6 +7,12 @@
     <color name="swipeoption_green">#36CF8E</color>
     <color name="swipeoption_blue">#3693D0</color>
     <color name="swipeoption_purple">#ff1744</color>
+    <color name="swipeoption_yellow">#FFEB3B</color>
 
+    <color name="item_background">#00BCD4</color>
+    <color name="rv_background">#00B4CD</color>
+
+    <color name="url_background">#3F91C8</color>
     <color name="black">#000000</color>
+    <color name="white">#ffffff</color>
 </resources>

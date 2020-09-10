@@ -67,7 +67,7 @@ class SensorPresenter implements Contract.Presenter {
             @Override
             public void onOpen(@NotNull WebSocket webSocket, Response response) {
                 super.onOpen(webSocket, response);
-                view.onDataTransmitting(pos);
+                view.onDataTransmitting(type);
             }
         });
         //开启传感器监听
@@ -84,6 +84,6 @@ class SensorPresenter implements Contract.Presenter {
         String type = info.get(pos).toLowerCase();
         binder.sleep(type);
         WSHandler.close(type);
-        view.onDataTransmissionStopped(pos);
+        view.onDataTransmissionStopped(type);
     }
 }
