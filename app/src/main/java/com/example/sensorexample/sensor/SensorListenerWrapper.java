@@ -9,6 +9,7 @@ public abstract class SensorListenerWrapper implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent event){
         String msg = gen(event);
+
         onSensorChanged(msg);
     }
 

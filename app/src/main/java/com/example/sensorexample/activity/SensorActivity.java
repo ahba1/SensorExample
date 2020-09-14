@@ -233,14 +233,14 @@ public class SensorActivity extends AppCompatActivity implements Contract.View {
     public void onDataTransmitting(String type) {
         int pos = ((SensorUIAdapter) Objects.requireNonNull(binding.rv.getAdapter())).getPosByType(type);
         BaseViewHolder viewHolder = (BaseViewHolder)binding.rv.getChildViewHolder(binding.rv.getChildAt(pos));
-        viewHolder.setTextColor(R.id.mainText, Color.RED);
+        viewHolder.setTextColor(R.id.mainText, Color.BLACK);
     }
 
     @Override
     public void onDataTransmissionStopped(String type) {
         int pos = ((SensorUIAdapter) Objects.requireNonNull(binding.rv.getAdapter())).getPosByType(type);
         BaseViewHolder viewHolder = (BaseViewHolder)binding.rv.getChildViewHolder(binding.rv.getChildAt(pos));
-        viewHolder.setTextColor(R.id.mainText, Color.BLACK);
+        viewHolder.setTextColor(R.id.mainText, Color.WHITE);
     }
 
     @Override

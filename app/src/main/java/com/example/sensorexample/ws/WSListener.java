@@ -36,6 +36,7 @@ public class WSListener extends WebSocketListener {
     public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
         super.onClosing(webSocket, code, reason);
         Log.v("closing", reason);
+
     }
 
     @Override

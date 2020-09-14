@@ -4,10 +4,8 @@ import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Binder;
-import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
 import com.example.sensorexample.activity.SensorActivity;
@@ -62,11 +60,12 @@ public class SensorBinder extends Binder {
 
     //自定义速率，安卓版本至少是2.3，API level 9
     //创建对应的传感器包装对象，设置启动延迟，发送速率和回调接口向ws发送信息
-    public void active(String type, SensorListenerWrapper listenerWrapper, long delay, long samplingPeriodUs){
+    public void active(String type, String remote, SensorListenerWrapper listenerWrapper, long delay, long samplingPeriodUs){
         if (!sensorWrapperMap.containsKey(type)||sensorWrapperMap.get(type)==null){
             int realType = SensorInfo.getRealType(type);
             Sensor sensor = manager.getDefaultSensor(realType);
-            SensorWrapper wrapper = new SensorWrapper(sensorService, type, sensor, listenerWrapper);
+            Log.v("TAG", (sensor==null)+"");
+            SensorWrapper wrapper = new SensorWrapper(sensorService, type, sensor, listenerWrapper, remote);
             wrapper.active(manager, delay, samplingPeriodUs);
             sensorWrapperMap.put(type, wrapper);
             Message message = handler.obtainMessage();
@@ -80,7 +79,7 @@ public class SensorBinder extends Binder {
     }
 
     public void active(String type, SensorListenerWrapper listenerWrapper, long samplingPeriodUs){
-        active(type, listenerWrapper, 0, samplingPeriodUs);
+        active(type, "0.0.0.0", listenerWrapper, 0, samplingPeriodUs);
     }
 
     public void active(String type, SensorListenerWrapper wrapper){
@@ -90,7 +89,7 @@ public class SensorBinder extends Binder {
     public void active(Task task){
         for (String type:task.getSensor()){
             WSHandler.connect(type);
-            active(type, new SensorListenerWrapper() {
+            active(type, task.getRemote(), new SensorListenerWrapper() {
                 @Override
                 public void onSensorChanged(String msg) {
                     setSensorMsg(type, msg);

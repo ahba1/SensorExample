@@ -5,7 +5,8 @@ import java.util.List;
 
 public class Task implements Serializable {
 
-    private List<Integer> device;
+    private String remote;
+    private List<String> device;
     private int delay;
     private List<String> sensor;
     private int spu;
@@ -13,18 +14,26 @@ public class Task implements Serializable {
     public Task() {
     }
 
-    public Task(List<Integer> device, int delay, List<String> sensor, int spu) {
+    public Task(String remote, List<String> device, int delay, List<String> sensor, int spu) {
         this.device = device;
         this.delay = delay;
         this.sensor = sensor;
         this.spu = spu;
     }
 
-    public List<Integer> getDevice() {
+    public String getRemote() {
+        return remote;
+    }
+
+    public void setRemote(String remote) {
+        this.remote = remote;
+    }
+
+    public List<String> getDevice() {
         return device;
     }
 
-    public void setDevice(List<Integer> device) {
+    public void setDevice(List<String> device) {
         this.device = device;
     }
 

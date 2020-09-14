@@ -2,6 +2,7 @@ package com.example.sensorexample.activity;
 
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
+import android.util.Log;
 
 import com.example.sensorexample.broadcast.NetworkStateReceiver;
 import com.example.sensorexample.sensor.SensorInfo;
@@ -61,9 +62,8 @@ class SensorPresenter implements Contract.Presenter {
     @Override
     public void startSensor(int pos) {
         final String type = info.get(pos).toLowerCase();
-
         //ws连接
-        WSHandler.connect(type, new WSListener(){
+        WSHandler.connect(type.replace(" ", ""), new WSListener(){
             @Override
             public void onOpen(@NotNull WebSocket webSocket, Response response) {
                 super.onOpen(webSocket, response);
@@ -74,6 +74,7 @@ class SensorPresenter implements Contract.Presenter {
         binder.active(type, new SensorListenerWrapper() {
             @Override
             public void onSensorChanged(String msg) {
+                Log.v("TAG", msg);
                 binder.setSensorMsg(type, msg);
             }
         });

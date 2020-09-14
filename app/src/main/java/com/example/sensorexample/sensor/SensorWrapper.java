@@ -8,6 +8,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import com.example.sensorexample.broadcast.NetworkStateReceiver;
 import com.example.sensorexample.ws.WSHandler;
 
 /**
@@ -34,12 +35,17 @@ public class SensorWrapper implements Runnable{
     //Ms
     private final static int MAX_LATENCY = 100;
 
-    public SensorWrapper(Context context, String type, Sensor sensor, SensorListenerWrapper listenerWrapper) {
+    private String remote;
+
+    private SensorData data;
+
+    public SensorWrapper(Context context, String type, Sensor sensor, SensorListenerWrapper listenerWrapper, String remote) {
         this.context = context;
         this.type = type;
         this.sensor = sensor;
         this.listenerWrapper = listenerWrapper;
         this.handler = new Handler(Looper.getMainLooper());
+        this.remote = remote;
         Log.v("wrapper", "创建完成");
     }
 
@@ -48,6 +54,7 @@ public class SensorWrapper implements Runnable{
     public void active(SensorManager manager, long delay, long samplingPeriodUs){
         this.samplingPeriodUs = samplingPeriodUs;
         this.delay = delay;
+        data = new SensorData(NetworkStateReceiver.getIp(), remote, msg, samplingPeriodUs);
         //设置最大延迟，防止传感器启动太占用资源，在达到指定延迟之后还未启动就关闭
         manager.registerListener(listenerWrapper, sensor, (int)samplingPeriodUs, MAX_LATENCY);
         //设置启动延迟
@@ -83,11 +90,19 @@ public class SensorWrapper implements Runnable{
         this.samplingPeriodUs = samplingPeriodUs;
     }
 
+    public String getRemote() {
+        return remote;
+    }
+
+    public void setRemote(String remote) {
+        this.remote = remote;
+    }
 
     @Override
     public void run() {
         if (msg!=null&&!msg.equals("")){
-            WSHandler.send(type, msg);
+            data.setRecord(msg);
+            WSHandler.send(type, data.toString());
         }
         handler.postDelayed(this, samplingPeriodUs);
     }
