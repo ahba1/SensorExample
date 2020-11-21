@@ -1,0 +1,319 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no,maximum-scale=1">
+        <title>hello</title>
+        <style>
+            @media screen and (max-width: 1280px) {
+                .container {
+                    width: 1280px;
+                }
+            }
+
+        </style>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+        <script src="https://cdn.staticfile.org/echarts/4.3.0/echarts.min.js"></script>
+        <script type="text/javascript">
+        </script>
+    </head>
+
+    <body>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <a class="navbar-brand" href="#">Sensor</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarColor01">
+                <ul class="navbar-nav mr-auto">
+                    <li id="orientation" hidden="hidden"  class="nav-item">
+                        <a class="nav-link" href="#" onclick="setDisplayChart('orientation')">orientation</a>
+                    </li>
+                    <li id="proximity" hidden="hidden"  class="nav-item">
+                        <a class="nav-link" href="#" onclick="setDisplayChart('proximity')">proximity</a>
+                    </li>
+                    <li id="magnetometer" hidden="hidden"  class="nav-item">
+                        <a class="nav-link" href="#" onclick="setDisplayChart('magnetometer')">magnetometer</a>
+                    </li>
+                    <li id="airpressure" hidden="hidden"  class="nav-item">
+                        <a class="nav-link" href="#" onclick="setDisplayChart('air pressure')">air pressure</a>
+                    </li>
+                    <li id="accelerometer" hidden="hidden"  class="nav-item">
+                        <a class="nav-link" href="#" onclick="setDisplayChart('accelerometer')">accelerometer</a>
+                    </li>
+                    <li id="thermometer" hidden="hidden"  class="nav-item">
+                        <a class="nav-link" href="#" onclick="setDisplayChart('thermometer')">thermometer</a>
+                    </li>
+                    <li id="lightsensor" hidden="hidden"  class="nav-item">
+                        <a class="nav-link" href="#" onclick="setDisplayChart('light sensor')">light sensor</a>
+                    </li>
+                    <li id="stepcounter" hidden="hidden"  class="nav-item">
+                        <a class="nav-link" href="#" onclick="setDisplayChart('step counter')">step counter</a>
+                    </li>
+                    <li id="gyroscope" hidden="hidden"  class="nav-item">
+                        <a class="nav-link" href="#" onclick="setDisplayChart('gyroscope')">gyroscope</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        <div class="container">
+            <div class="row">
+                <div id="chart" style="width: 100%;height:600px;"></div>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            const pageData = {};
+            let chart = echarts.init(document.getElementById('chart'));
+            let selected = "";
+            function updateThreeDimensional(name,data) {
+                chart.setOption(option = {
+                    title: {
+                        text: name
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    xAxis: {
+                        data: data.timestamp
+                    },
+                    yAxis: {
+                    },
+                    toolbox: {
+                        left: 'center',
+                        feature: {
+                            dataZoom: {
+                                yAxisIndex: 'none'
+                            },
+                            restore: {},
+                            saveAsImage: {}
+                        }
+                    },
+                    dataZoom: [{
+
+                    }, {
+                        type: 'inside'
+                    }],
+                    series: [{
+                        name: 'x',
+                        type: 'line',
+                        data: data.x,
+                        },
+                        {
+                            name: 'y',
+                            type: 'line',
+                            data: data.y,
+                        },
+                        {
+                            name: 'z',
+                            type: 'line',
+                            data: data.z,
+                        }
+                    ]
+                });
+            }
+            function updateOneDimensional(name,data) {
+                chart.setOption(option = {
+                    title: {
+                        text: name
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    xAxis: {
+                        data: data.timestamp
+                    },
+                    yAxis: {
+                    },
+                    toolbox: {
+                        left: 'center',
+                        feature: {
+                            dataZoom: {
+                                yAxisIndex: 'none'
+                            },
+                            restore: {},
+                            saveAsImage: {}
+                        }
+                    },
+                    dataZoom: [{
+
+                    }, {
+                        type: 'inside'
+                    }],
+                    series: {
+                        name: 'x',
+                        type: 'line',
+                        data: data.x,
+                    }
+                });
+            }
+            if("WebSocket" in window){
+                var ws = new WebSocket("ws://172.6.0.112:7999/data");
+                ws.open = function(){};
+                ws.onmessage = function(evt){
+                    const msg = evt.data;
+                    const data = JSON.parse(msg);
+                    if(!pageData.hasOwnProperty(data.data.type)){
+                        pageData[data.data.type] = {};
+                        setEnable(data.data.type);
+                    }
+                    if(selected === ""){
+                        setDisplayChart(data.data.type);
+                    }
+                    const currentData=pageData[data.data.type];
+                    const rawData=data.data.record;
+                    switch (data.data.type) {
+                        case "orientation":{
+                            const arrayData=rawData.split(',');
+                            if(!currentData.hasOwnProperty('timestamp')){
+                                currentData.x = [];
+                                currentData.y = [];
+                                currentData.z = [];
+                                currentData.timestamp = [];
+                            }
+                            currentData.x.push(arrayData[0]);
+                            currentData.y.push(arrayData[1]);
+                            currentData.z.push(arrayData[2]);
+                            currentData.timestamp.push((new Date()).toLocaleString());
+                            if(selected === "orientation"){
+                                updateThreeDimensional("orientation",currentData);
+                            }
+                            break;
+                        }
+                        case "proximity":{
+                            if(!currentData.hasOwnProperty('timestamp')){
+                                currentData.x = [];
+                                currentData.timestamp = [];
+                            }
+                            currentData.x.push(rawData);
+                            currentData.timestamp.push((new Date()).toLocaleString());
+                            if(selected === "proximity"){
+                                updateOneDimensional("proximity",currentData);
+                            }
+                            break;
+                        }
+                        case "magnetometer": {
+                            const arrayData = rawData.split(',');
+                            if (!currentData.hasOwnProperty('timestamp')) {
+                                currentData.x = [];
+                                currentData.y = [];
+                                currentData.z = [];
+                                currentData.timestamp = [];
+                            }
+                            currentData.x.push(arrayData[0]);
+                            currentData.y.push(arrayData[1]);
+                            currentData.z.push(arrayData[2]);
+                            currentData.timestamp.push((new Date()).toLocaleString());
+                            if (selected === "magnetometer") {
+                                updateThreeDimensional("magnetometer", currentData);
+                            }
+                            break;
+                        }
+                        case "airpressure":{
+                            if(!currentData.hasOwnProperty('timestamp')){
+                                currentData.x = [];
+                                currentData.timestamp = [];
+                            }
+                            currentData.x.push(rawData);
+                            currentData.timestamp.push((new Date()).toLocaleString());
+                            if(selected === "airpressure"){
+                                updateOneDimensional("airpressure",currentData);
+                            }
+                            break;
+                        }
+                        case "accelerometer":{
+                            const arrayData=rawData.split(',');
+                            if(!currentData.hasOwnProperty('timestamp')){
+                                currentData.x = [];
+                                currentData.y = [];
+                                currentData.z = [];
+                                currentData.timestamp = [];
+                            }
+                            currentData.x.push(arrayData[0]);
+                            currentData.y.push(arrayData[1]);
+                            currentData.z.push(arrayData[2]);
+                            currentData.timestamp.push((new Date()).toLocaleString());
+                            if(selected === "accelerometer"){
+                                updateThreeDimensional("accelerometer",currentData);
+                            }
+                            break;
+                        }
+                        case "thermometer":{
+                            if(!currentData.hasOwnProperty('timestamp')){
+                                currentData.x = [];
+                                currentData.timestamp = [];
+                            }
+                            currentData.x.push(rawData);
+                            currentData.timestamp.push((new Date()).toLocaleString());
+                            if(selected === "thermometer"){
+                                updateOneDimensional("thermometer",currentData);
+                            }
+                            break;
+                        }
+                        case "light sensor":{
+                            if(!currentData.hasOwnProperty('timestamp')){
+                                currentData.x = [];
+                                currentData.timestamp = [];
+                            }
+                            currentData.x.push(rawData);
+                            currentData.timestamp.push((new Date()).toLocaleString());
+                            if(selected === "light sensor"){
+                                updateOneDimensional("light sensor",currentData);
+                            }
+                            break;
+                        }
+                        case "step counter":{
+                            if(!currentData.hasOwnProperty('timestamp')){
+                                currentData.x = [];
+                                currentData.timestamp = [];
+                            }
+                            currentData.x.push(rawData);
+                            currentData.timestamp.push((new Date()).toLocaleString());
+                            if(selected === "step counter"){
+                                updateOneDimensional("step counter",currentData);
+                            }
+                            break;
+                        }
+                        case "gryoscope":{
+                            const arrayData=rawData.split(',');
+                            if(!currentData.hasOwnProperty('timestamp')){
+                                currentData.x = [];
+                                currentData.y = [];
+                                currentData.z = [];
+                                currentData.timestamp = [];
+                            }
+                            currentData.x.push(arrayData[0]);
+                            currentData.y.push(arrayData[1]);
+                            currentData.z.push(arrayData[2]);
+                            currentData.timestamp.push((new Date()).toLocaleString());
+                            if(selected === "gryoscope"){
+                                updateThreeDimensional("gryoscope",currentData);
+                            }
+                            break;
+                        }
+                    }
+
+
+                }
+            }
+            function setDisplayChart(name) {
+                if(name !== selected){
+                    if(selected !== "")
+                        $("#"+selected.replace(' ',"")).removeAttr("class","active");
+                    $("#"+name.replace(' ',"")).attr("class","active");
+                    selected = name;
+                    chart.clear();
+                }
+            }
+
+            function setEnable(name){
+                $("#"+name.replace(' ',"")).removeAttr("hidden");
+            }
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+
+    </body>
+</html>

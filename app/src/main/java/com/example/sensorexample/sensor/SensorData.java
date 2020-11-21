@@ -2,34 +2,28 @@ package com.example.sensorexample.sensor;
 
 import com.alibaba.fastjson.JSON;
 
-public class SensorData {
+import org.jetbrains.annotations.NotNull;
 
-    private String deviceIp;
-    private String remoteIp;
+import java.io.Serializable;
+
+public class SensorData implements Serializable {
+
+    private String type;
     private String record;
     private double spu;
 
-    public SensorData(String deviceIp, String remoteIp, String record, double spu) {
-        this.deviceIp = deviceIp;
-        this.remoteIp = remoteIp;
+    public SensorData(String type, String record, double spu) {
+        this.type = type;
         this.record = record;
         this.spu = spu;
     }
 
-    public String getDeviceIp() {
-        return deviceIp;
+    public String getType(){
+        return this.type;
     }
 
-    public void setDeviceIp(String deviceIp) {
-        this.deviceIp = deviceIp;
-    }
-
-    public String getRemoteIp() {
-        return remoteIp;
-    }
-
-    public void setRemoteIp(String remoteIp) {
-        this.remoteIp = remoteIp;
+    public void setType(String type){
+        this.type = type;
     }
 
     public String getRecord() {
@@ -48,6 +42,7 @@ public class SensorData {
         this.spu = spu;
     }
 
+    @NotNull
     @Override
     public String toString() {
         return JSON.toJSONString(this);

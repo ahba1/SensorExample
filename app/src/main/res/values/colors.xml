@@ -8,6 +8,7 @@
     <color name="swipeoption_blue">#3693D0</color>
     <color name="swipeoption_purple">#ff1744</color>
     <color name="swipeoption_yellow">#FFEB3B</color>
+    <color name="swipeoption_orange">#FF5722</color>
 
     <color name="item_background">#00BCD4</color>
     <color name="rv_background">#00B4CD</color>

@@ -38,6 +38,8 @@ dependencies {
     implementation 'com.alibaba:fastjson:1.1.72.android'
     implementation 'com.zyao89:zloading:1.2.0'
     implementation 'com.yqritc:recyclerview-flexibledivider:1.4.0'
+    implementation 'com.koushikdutta.async:androidasync:2.2.1'
+    implementation 'org.greenrobot:eventbus:3.2.0'
     implementation project(path: ':editor')
     annotationProcessor 'com.jakewharton:butterknife-compiler:10.0.0'
     testImplementation 'junit:junit:4.13'

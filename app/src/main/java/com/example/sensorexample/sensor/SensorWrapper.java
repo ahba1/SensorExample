@@ -1,15 +1,13 @@
 package com.example.sensorexample.sensor;
 
-import android.app.AlarmManager;
-import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 
 import com.example.sensorexample.broadcast.NetworkStateReceiver;
-import com.example.sensorexample.ws.WSHandler;
+
+import org.greenrobot.eventbus.EventBus;
 
 /**
  * 传感器包装类，实现Runnable接口，单独开一个线程去采集数据，并缓存，且对外暴露访问接口
@@ -23,8 +21,6 @@ public class SensorWrapper implements Runnable{
 
     private SensorListenerWrapper listenerWrapper;
 
-    private Context context;
-
     private final Handler handler;
 
     private volatile String msg;
@@ -35,18 +31,13 @@ public class SensorWrapper implements Runnable{
     //Ms
     private final static int MAX_LATENCY = 100;
 
-    private String remote;
-
     private SensorData data;
 
-    public SensorWrapper(Context context, String type, Sensor sensor, SensorListenerWrapper listenerWrapper, String remote) {
-        this.context = context;
+    public SensorWrapper(String type, Sensor sensor, SensorListenerWrapper listenerWrapper) {
         this.type = type;
         this.sensor = sensor;
         this.listenerWrapper = listenerWrapper;
         this.handler = new Handler(Looper.getMainLooper());
-        this.remote = remote;
-        Log.v("wrapper", "创建完成");
     }
 
     //传感器设置的spu并不是严格遵守这个采集时延，一般来说实际spu会小于理论设置的spu
@@ -54,15 +45,15 @@ public class SensorWrapper implements Runnable{
     public void active(SensorManager manager, long delay, long samplingPeriodUs){
         this.samplingPeriodUs = samplingPeriodUs;
         this.delay = delay;
-        data = new SensorData(NetworkStateReceiver.getIp(), remote, msg, samplingPeriodUs);
+        data = new SensorData(type, msg, samplingPeriodUs);
         //设置最大延迟，防止传感器启动太占用资源，在达到指定延迟之后还未启动就关闭
         manager.registerListener(listenerWrapper, sensor, (int)samplingPeriodUs, MAX_LATENCY);
         //设置启动延迟
-        Log.v("wrapper", "设置时延");
-
         handler.postDelayed(this, delay);
-        Log.v("wrapper", "设置完成");
+    }
 
+    public void active(SensorManager manager, long delay){
+        active(manager, delay, samplingPeriodUs);
     }
 
     public void sleep(SensorManager manager){
@@ -74,7 +65,7 @@ public class SensorWrapper implements Runnable{
         this.listenerWrapper = wrapper;
     }
 
-    public void setMsg(String msg) {
+    public synchronized void setMsg(String msg) {
         this.msg = msg;
     }
 
@@ -90,19 +81,11 @@ public class SensorWrapper implements Runnable{
         this.samplingPeriodUs = samplingPeriodUs;
     }
 
-    public String getRemote() {
-        return remote;
-    }
-
-    public void setRemote(String remote) {
-        this.remote = remote;
-    }
-
     @Override
     public void run() {
         if (msg!=null&&!msg.equals("")){
             data.setRecord(msg);
-            WSHandler.send(type, data.toString());
+            EventBus.getDefault().post(new SensorEvent(NetworkStateReceiver.getIp(), data));
         }
         handler.postDelayed(this, samplingPeriodUs);
     }

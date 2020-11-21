@@ -8,6 +8,7 @@
     <string name="send">Send</string>
     <string name="input_hint">Please Input&#8230;</string>
     <string name="start">Start</string>
+    <string name="chose">Chose</string>
     <string name="edit">Edit</string>
     <string name="stop">Stop</string>
     <string name="commit">commit</string>

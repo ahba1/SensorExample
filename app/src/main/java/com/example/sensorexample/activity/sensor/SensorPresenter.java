@@ -1,22 +1,16 @@
-package com.example.sensorexample.activity;
+package com.example.sensorexample.activity.sensor;
 
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
-import android.util.Log;
 
 import com.example.sensorexample.broadcast.NetworkStateReceiver;
+import com.example.sensorexample.exception.UnsupportedSpuException;
 import com.example.sensorexample.sensor.SensorInfo;
 import com.example.sensorexample.sensor.SensorListenerWrapper;
 import com.example.sensorexample.service.SensorBinder;
-import com.example.sensorexample.ws.WSHandler;
-import com.example.sensorexample.ws.WSListener;
 
-import org.jetbrains.annotations.NotNull;
-
-import java.util.ArrayList;
-
-import okhttp3.Response;
-import okhttp3.WebSocket;
+import java.util.HashSet;
+import java.util.Set;
 
 class SensorPresenter implements Contract.Presenter {
 
@@ -24,9 +18,9 @@ class SensorPresenter implements Contract.Presenter {
 
     private SensorBinder binder;
 
-    private final ArrayList<String> info =  new ArrayList<>(SensorInfo.getSensorNames());
-
     private NetworkStateReceiver networkStateReceiver;
+
+    private final Set<String> chosenTypes = new HashSet<>();
 
     SensorPresenter(Contract.View view){
         this.view = view;
@@ -39,7 +33,7 @@ class SensorPresenter implements Contract.Presenter {
 
     @Override
     public void setSamplingPeriodUs(int pos, int samplingPeriodUs) {
-        final String type = info.get(pos).toLowerCase();
+        String type = SensorInfo.getSensorNames().get(pos).toLowerCase();
         binder.setSamplingPeriodUs(type, samplingPeriodUs);
     }
 
@@ -60,31 +54,40 @@ class SensorPresenter implements Contract.Presenter {
     }
 
     @Override
+    public void addType(int pos) {
+        String type = SensorInfo.getSensorNames().get(pos);
+        chosenTypes.add(type);
+        view.onHolderSelected(type);
+    }
+
+    @Override
+    public void startAll() {
+        for(String type:chosenTypes){
+            startSensor(SensorInfo.getSensorNames().indexOf(type));
+        }
+        chosenTypes.clear();
+    }
+
+    @Override
     public void startSensor(int pos) {
-        final String type = info.get(pos).toLowerCase();
-        //ws连接
-        WSHandler.connect(type.replace(" ", ""), new WSListener(){
-            @Override
-            public void onOpen(@NotNull WebSocket webSocket, Response response) {
-                super.onOpen(webSocket, response);
-                view.onDataTransmitting(type);
-            }
-        });
+        String type = SensorInfo.getSensorNames().get(pos).toLowerCase();
         //开启传感器监听
-        binder.active(type, new SensorListenerWrapper() {
-            @Override
-            public void onSensorChanged(String msg) {
-                Log.v("TAG", msg);
-                binder.setSensorMsg(type, msg);
-            }
-        });
+        try {
+            binder.active(type, new SensorListenerWrapper() {
+                @Override
+                public void onSensorChanged(String msg) {
+                    binder.setSensorMsg(type, msg);
+                }
+            });
+        } catch (UnsupportedSpuException e) {
+            view.onError(e);
+        }
     }
 
     @Override
     public void stopSensor(int pos) {
-        String type = info.get(pos).toLowerCase();
+        String type = SensorInfo.getSensorNames().get(pos).toLowerCase();
         binder.sleep(type);
-        WSHandler.close(type);
         view.onDataTransmissionStopped(type);
     }
 }

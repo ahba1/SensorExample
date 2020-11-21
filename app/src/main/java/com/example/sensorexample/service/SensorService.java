@@ -11,7 +11,7 @@ import android.os.Build;
 import android.os.IBinder;
 
 
-import com.example.sensorexample.activity.SensorActivity;
+import com.example.sensorexample.activity.sensor.SensorActivity;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;

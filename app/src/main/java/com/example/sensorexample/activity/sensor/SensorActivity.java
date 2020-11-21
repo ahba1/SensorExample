@@ -1,4 +1,4 @@
-package com.example.sensorexample.activity;
+package com.example.sensorexample.activity.sensor;
 
 import android.annotation.SuppressLint;
 import android.content.ComponentName;
@@ -12,26 +12,26 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.Toast;
 
-import com.chad.library.adapter.base.viewholder.BaseViewHolder;
 import com.example.sensorexample.R;
 import com.example.sensorexample.SensorApplication;
+import com.example.sensorexample.activity.show.ShowActivity;
 import com.example.sensorexample.databinding.ActivityMainBinding;
+import com.example.sensorexample.exception.UnsupportedSpuException;
+import com.example.sensorexample.exception.UnsupportedTaskException;
 import com.example.sensorexample.sensor.SensorInfo;
+import com.example.sensorexample.sensor.Task;
+import com.example.sensorexample.server.ServerManager;
 import com.example.sensorexample.service.SensorBinder;
 import com.example.sensorexample.service.SensorService;
 import com.example.sensorexample.ui.SensorUIAdapter;
 import com.nikhilpanju.recyclerviewenhanced.RecyclerTouchListener;
-import com.zyao89.view.zloading.ZLoadingDialog;
-
-import java.util.ArrayList;
-import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -39,11 +39,10 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import cn.kevin.floatingeditor.EditorCallback;
 import cn.kevin.floatingeditor.EditorHolder;
 import cn.kevin.floatingeditor.FloatEditorActivity;
-
-import static com.zyao89.view.zloading.Z_TYPE.SINGLE_CIRCLE;
 
 @SuppressLint("NonConstantResourceId")
 @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -64,7 +63,7 @@ public class SensorActivity extends AppCompatActivity implements Contract.View {
     public final static int WS_CLOSED = 614;
 
     private void rvInit(){
-        SensorUIAdapter adapter = new SensorUIAdapter(new ArrayList<>(SensorInfo.getSensorNames()));
+        SensorUIAdapter adapter = new SensorUIAdapter(SensorInfo.getSensorNames());
         LinearLayoutManager manager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         binding.rv.setLayoutManager(manager);
         binding.rv.addItemDecoration(new RecyclerView.ItemDecoration() {
@@ -77,45 +76,72 @@ public class SensorActivity extends AppCompatActivity implements Contract.View {
     }
 
     private void btnInit(){
-        binding.btnCommit.setChecked(false);
-        binding.btnCommit.setOnCheckedChangeListener((view, isChecked) -> {
-            if (isChecked){
-                String url = binding.etUrl.getText().toString();
-                ZLoadingDialog zLoadingDialog = new ZLoadingDialog(SensorActivity.this);
-                zLoadingDialog.setLoadingBuilder(SINGLE_CIRCLE)
-                        .setLoadingColor(Color.BLACK)
-                        .setHintText("connecting...")
-                        .setHintTextSize(16)
-                        .setHintTextColor(Color.GRAY)
-                        .setDurationTime(0.5)
-                        .show();
-                binder.bindUrl(url, new SensorBinder.OnBindUrlListener() {
+//        binding.btnCommit.setChecked(false);
+//        binding.btnCommit.setOnCheckedChangeListener((view, isChecked) -> {
+//            if (isChecked){
+//                String url = binding.etUrl.getText().toString();
+//                ZLoadingDialog zLoadingDialog = new ZLoadingDialog(SensorActivity.this);
+//                zLoadingDialog.setLoadingBuilder(SINGLE_CIRCLE)
+//                        .setLoadingColor(Color.BLACK)
+//                        .setHintText("connecting...")
+//                        .setHintTextSize(16)
+//                        .setHintTextColor(Color.GRAY)
+//                        .setDurationTime(0.5)
+//                        .show();
+//                binder.bindUrl(url, new SensorBinder.OnBindUrlListener() {
+//                    @Override
+//                    public void onSuccess() {
+//                        zLoadingDialog.cancel();
+//                    }
+//
+//                    @Override
+//                    public void onFailure() {
+//                        zLoadingDialog.cancel();
+//                    }
+//
+//                }, itemChangedHandler);
+//            }else{
+//                binder.unBind();
+//            }
+//        });
+        binding.btnStart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                binder.startHttpService();
+                binder.startWebSocketService();
+                binder.setTaskCallBack(new ServerManager.TaskCallBack() {
                     @Override
-                    public void onSuccess() {
-                        zLoadingDialog.cancel();
+                    public void onTaskReceived(Task task) throws UnsupportedTaskException, UnsupportedSpuException {
+                        binder.active(task);
                     }
+                });
+                presenter.startAll();
+                Intent intent = new Intent(SensorActivity.this, ShowActivity.class);
+                startActivity(intent);
+            }
+        });
 
-                    @Override
-                    public void onFailure() {
-                        zLoadingDialog.cancel();
-                    }
-
-                }, itemChangedHandler);
-            }else{
-                binder.unBind();
+        binding.btnStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                binder.closeAll();
+                //serverProxy.closeAll();
             }
         });
     }
 
     private void listenerInit(){
         onTouchListener = new RecyclerTouchListener(this, binding.rv);
-        onTouchListener.setSwipeOptionViews(R.id.add, R.id.edit, R.id.change)
+        onTouchListener.setSwipeOptionViews(R.id.add, R.id.chose, R.id.edit, R.id.stop)
                 .setSwipeable(R.id.rowFG, R.id.rowBG, (viewID, position) -> {
                     switch (viewID){
                         case R.id.add:
                             presenter.startSensor(position);
                             break;
-                        case R.id.change:
+                        case R.id.chose:
+                            presenter.addType(position);
+                            break;
+                        case R.id.stop:
                             presenter.stopSensor(position);
                             break;
                         case R.id.edit:
@@ -152,6 +178,7 @@ public class SensorActivity extends AppCompatActivity implements Contract.View {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             binder = (SensorBinder)service;
+            binder.setHandler(itemChangedHandler);
             presenter.setBinder(binder);
         }
 
@@ -170,6 +197,7 @@ public class SensorActivity extends AppCompatActivity implements Contract.View {
         View view = binding.getRoot();
         setContentView(view);
         itemChangedHandler = new ItemEventHandler(this);
+
         //初始化rv
         rvInit();
 
@@ -181,7 +209,6 @@ public class SensorActivity extends AppCompatActivity implements Contract.View {
 
         //绑定service
         bindService(new Intent(this, SensorService.class), connection, BIND_AUTO_CREATE);
-
         binding.tvIp.setText(SensorApplication.ip);
     }
 
@@ -231,16 +258,37 @@ public class SensorActivity extends AppCompatActivity implements Contract.View {
 
     @Override
     public void onDataTransmitting(String type) {
-        int pos = ((SensorUIAdapter) Objects.requireNonNull(binding.rv.getAdapter())).getPosByType(type);
-        BaseViewHolder viewHolder = (BaseViewHolder)binding.rv.getChildViewHolder(binding.rv.getChildAt(pos));
-        viewHolder.setTextColor(R.id.mainText, Color.BLACK);
+        SensorUIAdapter adapter = (SensorUIAdapter)binding.rv.getAdapter();
+        if (adapter != null) {
+            adapter.getHolderByType(type).setTextColor(R.id.mainText, Color.BLACK);
+        }
     }
 
     @Override
     public void onDataTransmissionStopped(String type) {
-        int pos = ((SensorUIAdapter) Objects.requireNonNull(binding.rv.getAdapter())).getPosByType(type);
-        BaseViewHolder viewHolder = (BaseViewHolder)binding.rv.getChildViewHolder(binding.rv.getChildAt(pos));
-        viewHolder.setTextColor(R.id.mainText, Color.WHITE);
+        SensorUIAdapter adapter = (SensorUIAdapter)binding.rv.getAdapter();
+        if (adapter != null) {
+            adapter.getHolderByType(type).setTextColor(R.id.mainText, Color.WHITE);
+        }
+    }
+
+    @Override
+    public void onHolderSelected(String type) {
+        SensorUIAdapter adapter = (SensorUIAdapter)binding.rv.getAdapter();
+        if (adapter != null) {
+            int color = this.getColor(R.color.swipeoption_orange);
+            adapter.getHolderByType(type).setTextColor(R.id.mainText, color);
+        }
+    }
+
+    @Override
+    public ItemEventHandler getHandler() {
+        return itemChangedHandler;
+    }
+
+    @Override
+    public void onError(UnsupportedSpuException exception) {
+        Toast.makeText(this, exception.getMessage(), Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -285,7 +333,6 @@ public class SensorActivity extends AppCompatActivity implements Contract.View {
             if(msg.what==WS_OPEN){
                 String type = (String)msg.obj;
                 context.onDataTransmitting(type);
-                Log.v("ws open", type);
             }else if(msg.what==WS_CLOSED){
                 String type = (String)msg.obj;
                 context.onDataTransmissionStopped(type);

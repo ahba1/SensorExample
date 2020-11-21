@@ -8,10 +8,21 @@ import android.net.Network;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.util.Log;
+import android.util.Patterns;
+
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.Enumeration;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static android.content.Context.WIFI_SERVICE;
 
 public class NetworkStateReceiver extends BroadcastReceiver {
+
+    private Context context;
 
     public interface NetworkChangeListener{
 
@@ -25,16 +36,8 @@ public class NetworkStateReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        ConnectivityManager connectivityManager = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            Network[] networks = connectivityManager.getAllNetworks();
-            for (Network network:networks){
-                NetworkInfo networkInfo = connectivityManager.getNetworkInfo(network);
-                if (networkInfo.isConnected()&&!ip.equals(getIp(context))){
-                    ip = getIp(context);
-                    networkChangeListener.onNetworkChanged(ip);
-                    break;
-                }
-            }
+        this.context = context;
+        updateByStream();         
     }
 
     private String getIp(Context context){
@@ -51,5 +54,38 @@ public class NetworkStateReceiver extends BroadcastReceiver {
 
     public static String getIp(){
         return ip;
+    }
+
+    private boolean updateByWifi(){
+        if (!ip.equals(getIp(context))&&!"0.0.0.0".equals(ip)){
+            ip = getIp(context);
+            networkChangeListener.onNetworkChanged(ip);
+            return true;
+        }
+        return false;
+    }
+
+    private void updateByStream(){
+        String regex = "^(((\\d{1,2})|(1\\d{2})|(2[0-4]\\d)|(25[0-5]))\\.){3}((\\d{1,2})|(1\\d{2})|(2[0-4]\\d)|(25[0-5]))$";
+        Pattern p = Pattern.compile(regex);
+        try {
+            Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces();
+            while (en.hasMoreElements()){
+                NetworkInterface ntf = en.nextElement();
+                Enumeration<InetAddress> inetAddresses = ntf.getInetAddresses();
+                while (inetAddresses.hasMoreElements()){
+                    String hostAddr = inetAddresses.nextElement().getHostAddress();
+                    Matcher matcher = p.matcher(hostAddr);
+                    if (matcher.matches()&&!"127.0.0.1".equals(hostAddr)){
+                        ip = hostAddr;
+                    }
+                }
+            }
+        } catch (SocketException e) {
+            ip = "0.0.0.0";
+            e.printStackTrace();
+        }finally {
+            networkChangeListener.onNetworkChanged(ip);
+        }
     }
 }
